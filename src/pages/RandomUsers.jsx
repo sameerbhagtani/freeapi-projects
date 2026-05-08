@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+
 import PageShell from "../components/PageShell";
 
 const API_URL = "https://api.freeapi.app/api/v1/public/randomusers";
@@ -85,7 +86,7 @@ export default function RandomUsers() {
                             return (
                                 <article
                                     key={user.id}
-                                    className="group rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20 transition duration-200 hover:-translate-y-1 hover:border-orange-500/40 hover:bg-zinc-900"
+                                    className="group rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg transition duration-200 hover:-translate-y-1 hover:border-orange-500/40 hover:bg-zinc-900"
                                 >
                                     <div className="flex items-start gap-4">
                                         <img
@@ -120,7 +121,7 @@ export default function RandomUsers() {
                                         <p className="break-words">
                                             <span className="text-zinc-500">
                                                 Email:
-                                            </span>
+                                            </span>{" "}
                                             {user.email}
                                         </p>
                                         <p>
