@@ -10,39 +10,48 @@ export default function RandomUsers() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
-
-    async function fetchUsers(pageNumber) {
-        try {
-            setIsLoading(true);
-            setError("");
-
-            const res = await axios.get(`${API_URL}?page=${pageNumber}`);
-            if (res.data.success && res.data.data) {
-                setUsers(res.data.data.data);
-            }
-        } catch (err) {
-            setError(err.message || "Something went wrong");
-        } finally {
-            setIsLoading(false);
-        }
-    }
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        fetchUsers(page);
-    }, []);
+        const controller = new AbortController();
+
+        async function fetchUsers() {
+            try {
+                setIsLoading(true);
+                setError("");
+
+                const res = await axios.get(`${API_URL}?page=${page}`, {
+                    signal: controller.signal,
+                });
+
+                if (res.data.success && res.data.data) {
+                    setUsers(res.data.data.data);
+                    setTotalPages(res.data.data.totalPages || 1);
+                }
+            } catch (err) {
+                if (err.name === "CanceledError") return;
+
+                setError(err.message || "Something went wrong");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchUsers();
+
+        return () => {
+            controller.abort();
+        };
+    }, [page]);
 
     function handlePreviousPage() {
-        if (page === 1) return;
-
-        const newPage = page - 1;
-        setPage(newPage);
-        fetchUsers(newPage);
+        setPage((prevPage) => (prevPage > 1 ? prevPage - 1 : 1));
     }
 
     function handleNextPage() {
-        const newPage = page + 1;
-        setPage(newPage);
-        fetchUsers(newPage);
+        setPage((prevPage) =>
+            prevPage < totalPages ? prevPage + 1 : prevPage,
+        );
     }
 
     function formatDate(dateString) {
@@ -120,27 +129,23 @@ export default function RandomUsers() {
                                     <div className="mt-4 space-y-2 border-t border-zinc-800 pt-4 text-sm text-zinc-300">
                                         <p className="break-words">
                                             <span className="text-zinc-500">
-                                                Email:
-                                            </span>{" "}
+                                                Email:{" "}
+                                            </span>
                                             {user.email}
                                         </p>
-                                        <p>
+
+                                        <p className="break-words">
                                             <span className="text-zinc-500">
-                                                City:
+                                                Phone:{" "}
                                             </span>
-                                            {user.location.city}
+                                            {user.phone}
                                         </p>
-                                        <p>
+
+                                        <p className="break-words">
                                             <span className="text-zinc-500">
-                                                State:
+                                                Cell:{" "}
                                             </span>
-                                            {user.location.state}
-                                        </p>
-                                        <p>
-                                            <span className="text-zinc-500">
-                                                Country:
-                                            </span>
-                                            {user.location.country}
+                                            {user.cell}
                                         </p>
                                     </div>
                                 </article>
@@ -165,8 +170,8 @@ export default function RandomUsers() {
                         <button
                             type="button"
                             onClick={handleNextPage}
-                            disabled={isLoading}
-                            className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-orange-500/50 hover:text-orange-200"
+                            disabled={isLoading || page >= totalPages}
+                            className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-orange-500/50 hover:text-orange-200 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             Next
                         </button>
